@@ -57,7 +57,7 @@ userSchema.methods.isPassword = async function (password) {
     return await bcrypt.compare(password, this.password) // compares the again inputed password with already inputed password (hashed one)
 }
 
-userSchema.methods.generateAccessToken = function () {
+userSchema.methods.generateAccessToken = function () {  //  a token is a piece of data that serves as a form of credentials or proof of identity
     return jwt.sign(
         {
             _id: this.id,

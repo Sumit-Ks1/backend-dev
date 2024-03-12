@@ -12,3 +12,12 @@
 ## Made utils to make them use different in files multiple times . Therefore I made the code Write once Use Anywhere.
 ## In utils, we are having ApiError.js , so that any error come in website , it goes through ApiError.js , for this we need to include middlewares in between them (Errror to reach ApiError.js).
 ## We use mongoose-aggregate-paginate-v2 simplifies pagination for Mongoose aggregation results, making it easier to work with large datasets.
+## bycrypt middleware ensures that the password is hashed before saving it to the database, but only if the password has been modified during the save operation.
+## utils folder is for reusing files and its code anywhere.
+## JWT middleware
+### JWTs are commonly used for user authentication. After a user logs in, the server generates a JWT and sends it to the client. The client includes the JWT in subsequent requests to access protected resources.
+### An Access token is a type of token commonly used in authentication systems.Access tokens are often short-lived and have an expiration time. They are typically sent in the Authorization header of HTTP requests.
+### Unlike access tokens, refresh tokens are long-lived and are used to obtain new access tokens without requiring the user to log in again.
+### Both access tokens and refresh tokens can be implemented using JWTs.
+## MULTER 
+### It is a middleware which takes files from client-side to server-side.
