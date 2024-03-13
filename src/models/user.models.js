@@ -46,7 +46,7 @@ const userSchema = new Schema({
     }
 }, { timestamps: true })
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function (next) {  //The pre() function is used to define middleware functions that run before userSchema operations.The hook (or event) on which the middleware should execute (e.g., 'save', 'update', 'findOne', etc.).  A callback function that will be executed before the specified operation.The callback function typically takes the next parameter, which is called when the middleware completes its task.
     if (this.isModified("password")) return next();
 
     this.password = bcrypt.hash(this.password, 10)
@@ -77,7 +77,7 @@ userSchema.methods.generateRefreshToken = function () {
         {
             _id: this.id,
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN_SECRET,
         {
             expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }

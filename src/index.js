@@ -2,8 +2,10 @@ import dotenv from 'dotenv';
 
 import connectDB from './db/index.js';
 
+import { app } from './app.js';
+
 dotenv.config({
-    path: './env' // set -r dotenv/config --experimental-json-modules in script dev in package.json
+    path: './.env' // set -r dotenv/config --experimental-json-modules in script dev in package.json
 });
 
 connectDB()

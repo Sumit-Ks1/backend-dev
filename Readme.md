@@ -11,7 +11,7 @@
 ## Then I connected database with my backend. For that I have to first create a database and then connect it through a link which I get from that , basically I have to copy that link to .env file(dotenv is a lightweight npm package that automatically loads environment variables from a .env file into the process.env object) as it contains the sensitive info and that is my database link and its password (assigned to a variable) . And we will then connect it through mongoose line mongoose.connect(`${process.env.VariableName}/${DB_NAME}) in index.js file in db folder . 
 ## Made utils to make them use different in files multiple times . Therefore I made the code Write once Use Anywhere.
 ## In utils, we are having ApiError.js , so that any error come in website , it goes through ApiError.js , for this we need to include middlewares in between them (Errror to reach ApiError.js).
-## We use mongoose-aggregate-paginate-v2 simplifies pagination for Mongoose aggregation results, making it easier to work with large datasets.
+## mongoose-aggregate-paginate-v2 simplifies pagination for aggregated results in Mongoose, allowing you to efficiently handle large datasets while maintaining flexibility in customization.
 ## bycrypt middleware ensures that the password is hashed before saving it to the database, but only if the password has been modified during the save operation.
 ## utils folder is for reusing files and its code anywhere.
 ## JWT middleware
@@ -20,4 +20,6 @@
 ### Unlike access tokens, refresh tokens are long-lived and are used to obtain new access tokens without requiring the user to log in again.
 ### Both access tokens and refresh tokens can be implemented using JWTs.
 ## MULTER 
-### It is a middleware which takes files from client-side to server-side.
+### It is a middleware which takes files from client-side to server-side. 
+## Flow of web
+## Basically we have imported app.js in index.js and whatever we want to do , we will do in app.js and more often we will make routes in files in routes folder and therefore we are using app.use() instead of app.get() bcos we want to run our routes on different folder or file and therefore there we will decide what to do when user hits that api (that is in app.js as it will further see that at what api to redirect and what to perform - get or post) .
