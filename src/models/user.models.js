@@ -49,7 +49,7 @@ const userSchema = new Schema({
 userSchema.pre("save", async function (next) {  //The pre() function is used to define middleware functions that run before userSchema operations.The hook (or event) on which the middleware should execute (e.g., 'save', 'update', 'findOne', etc.).  A callback function that will be executed before the specified operation.The callback function typically takes the next parameter, which is called when the middleware completes its task.
     if (this.isModified("password")) return next();
 
-    this.password = bcrypt.hash(this.password, 10)
+    this.password = await bcrypt.hash(this.password, 10)
     next()
 })
 
@@ -57,7 +57,7 @@ userSchema.methods.isPassword = async function (password) {
     return await bcrypt.compare(password, this.password) // compares the again inputed password with already inputed password (hashed one)
 }
 
-userSchema.methods.generateAccessToken = function () {  //  a token is a piece of data that serves as a form of credentials or proof of identity
+userSchema.methods.generateAccessToken = function () {  //  JWTs securely transmit information between parties. The signature ensures the sender’s authenticity, and the content remains tamper-proof. Just before transmitting user sensitive data to database ,we have hashed (or encrypted ) it .A token is a piece of data that serves as a form of credentials or proof of identity
     return jwt.sign(
         {
             _id: this.id,
@@ -84,4 +84,4 @@ userSchema.methods.generateRefreshToken = function () {
     )
 }
 
-export default User = mongoose.model('User', userSchema);
+export const User = mongoose.model('User', userSchema);

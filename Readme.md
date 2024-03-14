@@ -19,7 +19,13 @@
 ### An Access token is a type of token commonly used in authentication systems.Access tokens are often short-lived and have an expiration time. They are typically sent in the Authorization header of HTTP requests.
 ### Unlike access tokens, refresh tokens are long-lived and are used to obtain new access tokens without requiring the user to log in again.
 ### Both access tokens and refresh tokens can be implemented using JWTs.
-## MULTER 
-### It is a middleware which takes files from client-side to server-side. 
+
 ## Flow of web
 ## Basically we have imported app.js in index.js and whatever we want to do , we will do in app.js and more often we will make routes in files in routes folder and therefore we are using app.use() instead of app.get() bcos we want to run our routes on different folder or file and therefore there we will decide what to do when user hits that api (that is in app.js as it will further see that at what api to redirect and what to perform - get or post) .
+## TOKENS (JWT WEBTOKEN)
+### During initial authentication (e.g., login), both an access token and a refresh token are issued.
+### The access token is used for short-term access to resources.
+### The refresh token is stored securely (usually as an HTTP-only cookie) and kept confidential.
+### When the access token expires, the client sends the refresh token to the server.
+### The server validates the refresh token, and if valid, issues a new access token without requiring user credentials.
+### This process allows seamless re-authentication without bothering the user.
