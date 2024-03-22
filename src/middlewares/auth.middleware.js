@@ -15,7 +15,7 @@ export const verifyJWT = asyncHandler(async (req, _ ,next) => { // underscore(_)
     
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET) //  After verifying the encoded access token key  and real access token key that is inside the .env file as secured key. decodeedToken will contain the decoded access token data (i.e the json payload i.e; the user data passed in jwt.sign in accessToken method inside the user.models.js)
     
-        const user = await User.findById(decodeToken?._id).select("-password -refreshToken")
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
     
         if(!user) {
             throw new ApiError(401, "Invalid access token")

@@ -32,7 +32,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // check for user creation
     // return res
     const { fullName, email, username, password } = req.body// req.body sees for the data coming from form or json
-    console.log(email);
+    
 
     // validation - not empty string or input
     if ([fullName, email, username, password].some((field) => field?.trim() === "")) {
@@ -43,11 +43,11 @@ const registerUser = asyncHandler(async (req, res) => {
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
-
+    console.log(email);
     if (existedUser) {
         throw new ApiError(409, "User already exists")
     }
-
+    console.log(username);
     // check for images, check and avatar
     const avatarLocalPath = req.files?.avatar[0]?.path // this req.files is special feature given by multer middleware that we used in user.routes.js for checking files before taking avatar in database.
     // const coverImageLocalPath = req.fileYs?.coverImage[0]?.path // .path Retrieves the local path where the uploaded file is temporarily stored on the server with field name coverImage. [0] means first file that is uploaded
@@ -79,7 +79,7 @@ const registerUser = asyncHandler(async (req, res) => {
         password,
         username: username.toLowerCase()
     })
-
+    console.log(email);
     // remove password and refresh token field from response
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
@@ -154,8 +154,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1
             }
         },
         {
@@ -203,7 +203,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         }
 
         const options = {
-            httpOnly: true,
+            httpOnly: true,  // httpOnly: true ensures that the cookie is only sent to the server and not accessible via JavaScript (client-side scripts), which helps prevent cross-site scripting (XSS) attacks.
             secure: true
         }
 
@@ -211,8 +211,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         return res
             .status(200)
-            .cookie("accessToken", accessToken)
-            .cookie("refreshToken", newrefreshToken)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newrefreshToken, options)
             .json(
                 new ApiResponse(
                     200,
@@ -236,17 +236,18 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid old password")
     }
 
-    user.password = newPassworduser.save({ validateBeforeSave: false })
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
 
     return res
-        .satatus(200)
+        .status(200)
         .json(new ApiResponse(200, {}, "Password changed successfully"))
 
 })
 
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200)
-        .json(200, req.user, "Current user fetched successfully")
+        .json(new ApiResponse(200, req.user, "Current user fetched successfully"))
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -256,7 +257,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required")
     }
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
@@ -264,10 +265,10 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
                 email: email
             }
         },
-        { new: true } // Due to this line of code , user get updated information
+        { new: true } // Due to this line of code , user get updated information. { new: true } is an option that specifies that the method should return the updated document. Without this option, the method would return the original document before the update.
     ).select("-password")
 
-    return res.status
+    return res
         .status(200)
         .json(new ApiResponse(200, user, "Account updated successfully"))
 });
@@ -295,9 +296,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     ).select("-password")
 
     return res.status(200)
-    .json(
-        new ApiResponse(200, user, "Avatar is updated successfully")
-    )
+        .json(
+            new ApiResponse(200, user, "Avatar is updated successfully")
+        )
 });
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
@@ -323,9 +324,134 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     ).select("-password")
 
     return res.status(200)
-    .json(
-        new ApiResponse(200, user, "Cover Image is updated successfully")
-    )
+        .json(
+            new ApiResponse(200, user, "Cover Image is updated successfully")
+        )
 });
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage }
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const { username } = req.params
+
+    if (!username?.trim()) {
+        throw new ApiError(400, "Username is missing")
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match: {
+                username: username?.toLowerCase()
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subsribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
+                },
+                channelsSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    // $cond is a conditional operator that allows you to specify an if-then-else condition.
+                    $cond: {  //if: This is the condition to evaluate. If this condition is true, the $cond operator will return the value specified in the then field; otherwise, it will return the value specified in the else field.
+                        if: { $in: [req.user?._id, "$subsribers.subscriber"] }, // $in: This is an operator that checks if a value is in an array or object. "$subsribers.subscriber": This is the path to the field in the documents being aggregated. It’s prefixed with a dollar sign to indicate that it’s a field path.
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                fullName: 1,
+                username: 1,
+                subscribersCount: 1,
+                channelsSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1
+            }
+        }
+    ])
+
+    if (!channel?.length) {
+        throw new ApiError(404, "channel does not exists")
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, channel[0], "User channel fetched successfully.")
+        )
+})
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: {
+                                $project: {
+                                    fullName: 1,
+                                    username: 1,
+                                    avatar: 1,
+
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            owner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            user[0].watchHistory ,
+            "Watch History fetched successfully"
+        )
+    )
+})
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory}
